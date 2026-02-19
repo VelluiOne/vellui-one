@@ -1,0 +1,36 @@
+// Configuração do Banco
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// MODELO DE EMPRESA (O Tenant)
+// Cada cliente do seu SaaS será uma "Company"
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique // vellui.com/empresa-a
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos: Tudo que a empresa possui
+  users     User[]
+}
+
+// MODELO DE USUÁRIO
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  
+  // A CHAVE DE OURO: Cada usuário obrigatoriamente pertence a uma empresa
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
