@@ -9,16 +9,17 @@ generator client {
 }
 
 // MODELO DE EMPRESA (O Tenant)
-// Cada cliente do seu SaaS será uma "Company"
 model Company {
   id        String   @id @default(cuid())
   name      String
-  slug      String   @unique // vellui.com/empresa-a
+  slug      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relacionamentos: Tudo que a empresa possui
+  // Relacionamentos:
   users     User[]
+  // ADICIONE ESTA LINHA ABAIXO:
+  customers Customer[] 
 }
 
 // MODELO DE USUÁRIO
@@ -33,4 +34,21 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  document    String?  // CPF ou CNPJ
+  status      String   @default("ACTIVE") // ACTIVE, LEAD, INACTIVE
+  
+  // ISOLAMENTO MULTI-TENANT
+  company     Company  @relation(fields: [companyId], references: [id])
+  companyId   String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([companyId])
 }

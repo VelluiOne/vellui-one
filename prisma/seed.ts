@@ -2,19 +2,27 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  const company = await prisma.company.create({
+  // 1. Buscamos a Empresa Teste (Slug: empresa-teste)
+  const empresaTeste = await prisma.company.findUnique({
+    where: { slug: "empresa-teste" }
+  })
+
+  if (!empresaTeste) {
+    console.log("❌ Erro: Empresa Teste não encontrada. Crie ela no Prisma Studio primeiro!")
+    return
+  }
+
+  // 2. Criamos o cliente vinculado especificamente a ela
+  const customer = await prisma.customer.create({
     data: {
-      name: "Vellui Tech",
-      slug: "vellui-tech",
-      users: {
-        create: {
-          email: "neto@vellui.com",
-          name: "Neto",
-        }
-      }
+      name: "Cliente Secreto da Empresa B",
+      email: "secreto@empresa-b.com",
+      companyId: empresaTeste.id, // O segredo da segurança está aqui!
+      status: "ACTIVE"
     }
   })
-  console.log("Banco populado com sucesso!", company)
+
+  console.log("✅ Sucesso! Cliente criado e isolado na Empresa Teste:", customer.name)
 }
 
 main()
