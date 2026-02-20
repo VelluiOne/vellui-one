@@ -2,34 +2,31 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  // 1. Buscamos a Empresa Teste (Slug: empresa-teste)
-  const empresaTeste = await prisma.company.findUnique({
-    where: { slug: "empresa-teste" }
+  // 1. Criamos a Empresa B (concorrente) de forma garantida
+  const empresaB = await prisma.company.upsert({
+    where: { slug: 'empresa-b' },
+    update: {},
+    create: {
+      name: 'Empresa Concorrente B',
+      slug: 'empresa-b',
+    },
   })
 
-  if (!empresaTeste) {
-    console.log("❌ Erro: Empresa Teste não encontrada. Crie ela no Prisma Studio primeiro!")
-    return
-  }
-
-  // 2. Criamos o cliente vinculado especificamente a ela
-  const customer = await prisma.customer.create({
+  // 2. Criamos o Cliente Secreto dentro dessa Empresa B
+  const cliente = await prisma.customer.create({
     data: {
-      name: "Cliente Secreto da Empresa B",
-      email: "secreto@empresa-b.com",
-      companyId: empresaTeste.id, // O segredo da segurança está aqui!
-      status: "ACTIVE"
+      name: 'Cliente Secreto da Empresa B',
+      email: 'contato@concorrente.com',
+      companyId: empresaB.id, // O "muro" de separação
+      status: 'ACTIVE'
     }
   })
 
-  console.log("✅ Sucesso! Cliente criado e isolado na Empresa Teste:", customer.name)
+  console.log(`✅ Sucesso!`)
+  console.log(`🏢 Empresa Criada: ${empresaB.name}`)
+  console.log(`👤 Cliente Isolado: ${cliente.name}`)
 }
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+  .catch((e) => { console.error(e); process.exit(1) })
+  .finally(async () => { await prisma.$disconnect() })
