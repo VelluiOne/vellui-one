@@ -1,35 +1,55 @@
-"use client" // Essencial para formulários interativos
+"use client"
 
-import { createCustomerAction } from "../actions";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-export function CustomerForm({ userEmail }: { userEmail: string }) {
+export function CustomerForm({ companyId }: { companyId: string }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setLoading(true);
+
+    const formData = new FormData(event.currentTarget);
+    
+    const data = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone: "000000000",
+      companyId: companyId, // Envia o ID da empresa da URL
+    };
+
+    try {
+      const response = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) throw new Error("Erro ao salvar");
+
+      (event.target as HTMLFormElement).reset();
+      router.refresh();
+      alert("Cliente salvo na empresa correta!");
+    } catch (error) {
+      alert("Erro ao salvar.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <form 
-      action={(formData) => createCustomerAction(formData, userEmail)}
-      className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-8"
-    >
-      <h2 className="text-lg font-semibold mb-4 text-gray-800">Novo Cliente</h2>
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <input
-          name="name"
-          placeholder="Nome do Cliente"
-          required
-          className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
-        />
-        <input
-          name="email"
-          type="email"
-          placeholder="E-mail"
-          required
-          className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
-        />
-        <button 
-          type="submit"
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors font-medium"
-        >
-          Adicionar
-        </button>
-      </div>
+    <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-lg border flex gap-4">
+      <input name="name" placeholder="Nome" required className="p-2 border rounded text-black" />
+      <input name="email" type="email" placeholder="E-mail" required className="p-2 border rounded text-black" />
+      <button 
+        type="submit" 
+        disabled={loading}
+        className="bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400"
+      >
+        {loading ? "..." : "Adicionar"}
+      </button>
     </form>
   );
 }

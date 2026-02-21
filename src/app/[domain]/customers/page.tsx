@@ -1,51 +1,74 @@
-import { getCustomersByDomain } from "@/services/customer.service";
+import { auth } from "@/auth";
+import prisma from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import { CustomerForm } from "./components/CustomerForm";
 
-export default async function CustomersPage({ 
-  params 
-}: { 
-  params: Promise<{ domain: string }> 
+export default async function CustomersPage(props: {
+  params: Promise<{ domain: string }>;
 }) {
-  const { domain } = await params;
+  const params = await props.params;
+  const domain = params.domain;
 
-  // BUSCA AUTOMÁTICA: Agora o sistema usa o domínio da URL para filtrar
-  const customers = await getCustomersByDomain(domain);
+  const session = await auth();
+  if (!session?.user) redirect("/auth/login");
 
-  // Mantemos seu e-mail apenas para o formulário saber quem está logado
-  const userEmail = "neto.vellui@gmail.com"; 
+  let customers = [];
+  let companyId = "";
+
+  try {
+    // Busca a empresa pelo domínio da URL
+    const company = await (prisma as any).company.findFirst({
+      where: { slug: domain },
+    });
+
+    if (company) {
+      companyId = company.id;
+      // Busca clientes APENAS desta empresa
+      customers = await (prisma as any).customer.findMany({
+        where: { companyId: company.id },
+        orderBy: { createdAt: "desc" },
+      });
+    }
+  } catch (error) {
+    console.error("Erro ao carregar dados:", error);
+  }
 
   return (
-    <div className="max-w-5xl mx-auto p-8">
-      <header className="mb-8 border-b pb-4">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Gestão de Clientes
-        </h1>
-        <p className="text-blue-600 font-medium">
-          Unidade atual: <span className="underline">{domain}</span>
-        </p>
-      </header>
-      
-      <CustomerForm userEmail={userEmail} />
+    <div className="p-6 space-y-6 text-black bg-white min-h-screen">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold">Clientes</h1>
+          <p className="text-gray-500">
+            Empresa: <span className="font-bold text-blue-600 uppercase">{domain}</span>
+          </p>
+        </div>
+        {/* Passamos o ID da empresa para o formulário saber onde salvar */}
+        <CustomerForm companyId={companyId} />
+      </div>
 
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-700">Lista de Clientes</h2>
-        {customers.length === 0 ? (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-            <p className="text-yellow-700">Nenhum cliente encontrado para "{domain}".</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {customers.map((c) => (
-              <div key={c.id} className="p-4 bg-white border rounded-lg shadow-sm flex justify-between items-center">
-                <div>
-                  <p className="font-bold text-gray-800">{c.name}</p>
-                  <p className="text-sm text-gray-500">{c.email}</p>
-                </div>
-                <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full uppercase">Ativo</span>
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="rounded-md border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="p-4 text-left">Nome</th>
+              <th className="p-4 text-left">Email</th>
+              <th className="p-4 text-left">Telefone</th>
+            </tr>
+          </thead>
+          <tbody>
+            {customers.length === 0 ? (
+              <tr><td colSpan={3} className="p-8 text-center">Nenhum cliente nesta empresa.</td></tr>
+            ) : (
+              customers.map((c: any) => (
+                <tr key={c.id} className="border-b">
+                  <td className="p-4 font-medium">{c.name}</td>
+                  <td className="p-4">{c.email}</td>
+                  <td className="p-4">{c.phone}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

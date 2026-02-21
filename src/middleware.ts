@@ -1,35 +1,27 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { auth } from "@/auth" // Importamos o motor de login
+import { auth } from "@/auth"
+import { NextResponse } from "next/server"
 
 export default auth((req) => {
-  const url = req.nextUrl
-  const hostname = req.headers.get('host')
-  const isLoggedIn = !!req.auth // Verifica se o usuário está logado
+  const isLoggedIn = !!req.auth
+  const isAuthPage = req.nextUrl.pathname === "/login"
 
-  const searchPart = process.env.NODE_ENV === 'production' 
-    ? '.vellui.com' 
-    : '.localhost:3000'
-
-  const subdomain = hostname?.replace(searchPart, '')
-
-  // 1. Se estiver na página de login, deixa passar
-  if (url.pathname === '/login') return NextResponse.next()
-
-  // 2. Se não houver subdomínio (página principal do SaaS), deixa passar
-  if (!subdomain || subdomain === 'localhost:3000' || subdomain === 'www') {
+  // 1. Se o usuário tentar acessar o login já estando logado, manda pro início
+  if (isAuthPage) {
+    if (isLoggedIn) {
+      return NextResponse.redirect(new URL("/", req.nextUrl))
+    }
     return NextResponse.next()
   }
 
-  // 3. BLOQUEIO DE SEGURANÇA: Se tentar acessar subdomínio sem estar logado
+  // 2. Se NÃO estiver logado e tentar acessar qualquer outra página, manda pro login
   if (!isLoggedIn) {
-    return NextResponse.redirect(new URL('/login', req.url))
+    return NextResponse.redirect(new URL("/login", req.nextUrl))
   }
 
-  // 4. Se tudo estiver certo, faz o roteamento interno
-  return NextResponse.rewrite(new URL(`/${subdomain}${url.pathname}`, req.url))
+  return NextResponse.next()
 })
 
+// Define quais rotas o middleware deve vigiar
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 }

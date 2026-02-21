@@ -27,7 +27,8 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
-  
+  password  String   @default("123456") // ADICIONE ESTA LINHA AQUI!
+
   // A CHAVE DE OURO: Cada usuário obrigatoriamente pertence a uma empresa
   companyId String
   company   Company  @relation(fields: [companyId], references: [id])
