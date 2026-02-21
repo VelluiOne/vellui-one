@@ -8,21 +8,21 @@ export async function POST(req: Request) {
     if (!session?.user) return new NextResponse("Não autorizado", { status: 401 });
 
     const body = await req.json();
-    const { name, email, phone, companyId } = body;
+    const { name, email, phone, value, companyId } = body;
 
-    // Criamos o cliente usando o companyId que veio do formulário
     const customer = await (prisma as any).customer.create({
       data: {
         name,
         email,
-        phone,
+        phone: phone || "",
+        value: value ? Number(value) : 0, 
         companyId: companyId, 
       },
     });
 
     return NextResponse.json(customer);
   } catch (error: any) {
-    console.error("Erro na API:", error);
+    console.error("ERRO NA API:", error);
     return new NextResponse(`Erro: ${error.message}`, { status: 500 });
   }
 }

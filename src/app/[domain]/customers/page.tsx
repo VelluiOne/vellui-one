@@ -53,17 +53,21 @@ export default async function CustomersPage(props: {
               <th className="p-4 text-left">Nome</th>
               <th className="p-4 text-left">Email</th>
               <th className="p-4 text-left">Telefone</th>
+              <th className="p-4 text-left">Valor Negócio</th>
             </tr>
           </thead>
           <tbody>
             {customers.length === 0 ? (
-              <tr><td colSpan={3} className="p-8 text-center">Nenhum cliente nesta empresa.</td></tr>
+              <tr><td colSpan={4} className="p-8 text-center">Nenhum cliente nesta empresa.</td></tr>
             ) : (
               customers.map((c: any) => (
-                <tr key={c.id} className="border-b">
+                <tr key={c.id} className="border-b hover:bg-gray-50 bg-white">
                   <td className="p-4 font-medium">{c.name}</td>
                   <td className="p-4">{c.email}</td>
-                  <td className="p-4">{c.phone}</td>
+                  <td className="p-4">{c.phone || "-"}</td>
+                  <td className="p-4 font-bold text-green-700">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.value || 0)}
+                  </td>
                 </tr>
               ))
             )}
