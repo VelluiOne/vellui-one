@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { CustomerForm } from "./components/CustomerForm";
+import { CustomerForm } from "./customers/components/CustomerForm";
 
 export default async function CustomersPage(props: {
   params: Promise<{ domain: string }>;

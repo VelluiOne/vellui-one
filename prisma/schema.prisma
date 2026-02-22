@@ -28,7 +28,7 @@ model User {
   name      String?
   password  String   @default("123456")
 
-  // A CHAVE DE OURO: Cada usuário obrigatoriamente pertence a uma empresa
+  // Cada usuário pertence a uma empresa
   companyId String
   company   Company  @relation(fields: [companyId], references: [id])
 
@@ -36,29 +36,31 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-// MODELO DE CLIENTE (Com Valor e Estágio para o Kanban)
+// MODELO DE CLIENTE (Evoluído para CRM Profissional)
 model Customer {
-  id        String   @id @default(cuid())
-  name      String
-  email     String?
-  phone     String?
-  document  String?  // CPF ou CNPJ
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  document    String?  // CPF ou CNPJ
   
-  // NOVO: Valor do Negócio (Dinheiro)
-  value     Float    @default(0) 
-  
-  // NOVO: Estágio do Funil (Prepara para o Kanban)
-  // Ex: "LEAD", "CONTATO", "PROPOSTA", "FECHADO"
-  stage     String   @default("LEAD") 
-  
-  status    String   @default("ACTIVE") 
+  // FINANCEIRO E FUNIL
+  value       Float    @default(0) 
+  stage       String   @default("LEAD") // LEAD, NEGOCIACAO, FECHADO, PERDIDO
+  status      String   @default("ACTIVE") 
+
+  // INTELIGÊNCIA COMERCIAL (Novos campos)
+  source      String?  // Ex: Instagram, Google, Indicação, WhatsApp
+  priority    String   @default("MEDIA") // BAIXA, MEDIA, ALTA
+  lossReason  String?  // Motivo da perda (Preço, Concorrente, Prazo, etc)
+  notes       String?  // Histórico de conversas / Observações técnicas
   
   // ISOLAMENTO MULTI-TENANT
-  company   Company  @relation(fields: [companyId], references: [id])
-  companyId String
+  company     Company  @relation(fields: [companyId], references: [id])
+  companyId   String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([companyId])
 }

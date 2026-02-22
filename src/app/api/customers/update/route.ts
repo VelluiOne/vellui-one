@@ -1,24 +1,20 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function PATCH(req: Request) {
+export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { id, name, value, email, phone } = body;
+    const { id, stage } = body;
 
-    const updated = await (prisma as any).customer.update({
+    // O (prisma as any) é usado para evitar erros de tipagem caso o schema não esteja sincronizado
+    const updatedCustomer = await (prisma as any).customer.update({
       where: { id },
-      data: { 
-        name, 
-        value: Number(value), 
-        email, 
-        phone 
-      },
+      data: { stage },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json(updatedCustomer);
   } catch (error) {
-    console.error("ERRO_API_UPDATE:", error);
-    return NextResponse.json({ error: "Erro ao atualizar" }, { status: 500 });
+    console.error("Erro na API de Update:", error);
+    return NextResponse.json({ error: "Erro ao atualizar o cliente" }, { status: 500 });
   }
 }
