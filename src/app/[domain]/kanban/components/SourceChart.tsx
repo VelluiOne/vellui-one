@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 export function SourceChart({ data }: { data: { name: string, value: number }[] }) {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
-  // Filtramos dados zerados para o gráfico não tentar renderizar fatias invisíveis
+  // Filtramos dados zerados
   const chartData = data.filter(d => d.value > 0);
 
   return (
@@ -13,13 +13,14 @@ export function SourceChart({ data }: { data: { name: string, value: number }[] 
         Distribuição por Origem (R$)
       </h3>
       
-      <div className="flex-1 w-full relative">
+      {/* AJUSTE AQUI: Definimos uma altura fixa para o container do gráfico */}
+      <div className="w-full h-[220px] relative mt-2">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={chartData.length > 0 ? chartData : [{ name: "Sem dados", value: 1 }]}
               cx="50%"
-              cy="45%" 
+              cy="50%" 
               innerRadius={50} 
               outerRadius={70} 
               paddingAngle={5}
@@ -46,10 +47,10 @@ export function SourceChart({ data }: { data: { name: string, value: number }[] 
               iconType="circle"
               wrapperStyle={{ 
                 fontSize: '9px', 
+                fontFamily: 'inherit',
                 fontWeight: '800', 
                 textTransform: 'uppercase',
-                paddingTop: '20px',
-                width: '100%' 
+                paddingTop: '10px'
               }} 
             />
           </PieChart>

@@ -1,20 +1,35 @@
-import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { id, stage } = body;
+    const { id, ...data } = body;
 
-    // O (prisma as any) é usado para evitar erros de tipagem caso o schema não esteja sincronizado
-    const updatedCustomer = await (prisma as any).customer.update({
+    // 1. Converte o valor financeiro para número (decimal) se ele existir
+    if (data.value) data.value = parseFloat(data.value);
+
+    // 2. Executa a atualização do cliente (Email, Whats, Status, etc)
+    const updated = await prisma.customer.update({
       where: { id },
-      data: { stage },
+      data: data, // Aqui continua salvando tudo automaticamente
     });
 
-    return NextResponse.json(updatedCustomer);
+    // 3. SE a nota (notes) veio no envio, vamos criar um registro histórico
+    if (data.notes && data.notes.trim() !== "") {
+      await prisma.activity.create({
+        data: {
+          customerId: id,
+          type: 'NOTE',
+          content: data.notes,
+          completed: true // Notas são registros históricos, então já nascem concluídas
+        }
+      });
+    }
+
+    return NextResponse.json(updated);
   } catch (error) {
-    console.error("Erro na API de Update:", error);
-    return NextResponse.json({ error: "Erro ao atualizar o cliente" }, { status: 500 });
+    console.error("ERRO_UPDATE_CUSTOMER:", error);
+    return NextResponse.json({ error: "Erro ao salvar" }, { status: 500 });
   }
 }

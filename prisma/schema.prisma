@@ -36,31 +36,51 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-// MODELO DE CLIENTE (Evoluído para CRM Profissional)
+// MODELO DE CLIENTE
 model Customer {
   id          String   @id @default(cuid())
   name        String
   email       String?
   phone       String?
-  document    String?  // CPF ou CNPJ
+  document    String?  
   
   // FINANCEIRO E FUNIL
   value       Float    @default(0) 
-  stage       String   @default("LEAD") // LEAD, NEGOCIACAO, FECHADO, PERDIDO
+  stage       String   @default("LEAD") 
   status      String   @default("ACTIVE") 
 
-  // INTELIGÊNCIA COMERCIAL (Novos campos)
-  source      String?  // Ex: Instagram, Google, Indicação, WhatsApp
-  priority    String   @default("MEDIA") // BAIXA, MEDIA, ALTA
-  lossReason  String?  // Motivo da perda (Preço, Concorrente, Prazo, etc)
-  notes       String?  // Histórico de conversas / Observações técnicas
+  // INTELIGÊNCIA COMERCIAL
+  source      String?  
+  priority    String   @default("MEDIA") 
+  lossReason  String?  
+  notes       String?  
   
   // ISOLAMENTO MULTI-TENANT
   company     Company  @relation(fields: [companyId], references: [id])
   companyId   String
 
+  // RELACIONAMENTO COM ATIVIDADES
+  activities  Activity[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([companyId])
+}
+
+model Activity {
+  id           String    @id @default(cuid())
+  customerId   String
+  type         String    // NOTE ou MEETING
+  content      String   
+  meetingLink  String?
+  scheduledTo  DateTime? 
+  
+  // ADICIONE ESTA LINHA ABAIXO:
+  completed    Boolean   @default(false) 
+  
+  createdAt    DateTime  @default(now())
+  customer     Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
 }

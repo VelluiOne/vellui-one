@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react";
 import { EditCustomerModal } from "./EditCustomerModal";
+import { Clock } from "lucide-react"; // Importando o ícone de relógio
 
 export function KanbanCard({ customer }: { customer: any }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,6 +15,13 @@ export function KanbanCard({ customer }: { customer: any }) {
     MEDIA: "bg-yellow-500",
     BAIXA: "bg-blue-500"
   };
+
+  // --- LÓGICA PARA BUSCAR A REUNIÃO DE HOJE ---
+  const today = new Date().toLocaleDateString('pt-BR');
+  const nextMeeting = customer.activities?.find((a: any) => {
+    if (!a.scheduledTo || a.type !== 'MEETING' || a.completed) return false;
+    return new Date(a.scheduledTo).toLocaleDateString('pt-BR') === today;
+  });
 
   return (
     <>
@@ -39,6 +47,19 @@ export function KanbanCard({ customer }: { customer: any }) {
           </div>
           <p className="text-[10px] text-slate-400">{customer.email || 'Sem e-mail'}</p>
         </div>
+
+        {/* --- NOVO ALERTA COM HORÁRIO ESPECÍFICO --- */}
+        {nextMeeting && (
+          <div className="mb-3 py-1.5 px-3 bg-blue-600 text-white text-[9px] font-black rounded-lg flex items-center justify-between animate-pulse shadow-md">
+            <div className="flex items-center gap-2">
+              <Clock size={12} />
+              <span className="uppercase tracking-wider italic">Reunião Hoje</span>
+            </div>
+            <span className="bg-white text-blue-600 px-1.5 py-0.5 rounded shadow-sm">
+              {new Date(nextMeeting.scheduledTo).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+        )}
         
         <div className="flex justify-between items-end border-t pt-3">
           <div>
@@ -48,9 +69,16 @@ export function KanbanCard({ customer }: { customer: any }) {
           
           {/* BADGE DE ORIGEM (SOURCE) */}
           {customer.source && (
-            <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase tracking-wider">
-              {customer.source}
-            </span>
+            <div className="flex flex-col items-end gap-1">
+               {customer.activities?.length > 0 && (
+                 <span className="text-[7px] font-bold text-blue-500 uppercase">
+                   {customer.activities.length} Atividades
+                 </span>
+               )}
+               <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase tracking-wider">
+                {customer.source}
+              </span>
+            </div>
           )}
         </div>
       </div>
